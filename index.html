@@ -708,23 +708,17 @@
 
 <script>
     // --- SUPABASE INITIALIZATION ---
-const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdnFwa21hZnBnaGp6bmdkZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDA2NTksImV4cCI6MjEwNDAxNjY1OX0.xLSSlYBAhhvtPKuhjMRJofFJdXbgcsleRdaJ1HSn1ZU'; // Sua chave do Supabase
+    const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdnFwa21hZnBnaGp6bmdkZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDA2NTksImV4cCI6MjEwNDAxNjY1OX0.xLSSlYBAhhvtPKuhjMRJofFJdXbgcsleRdaJ1HSn1ZU';
 
-// Força a criação na janela global (window)
-if (window.supabase) {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    var supabase = window.supabaseClient; // Suporte para código legado
-    console.log("Supabase inicializado com sucesso!");
-} else {
-    console.error("Erro: A biblioteca do Supabase não foi carregada no HTML.");
-}   
-
+    // Garante que o cliente é criado via objeto global do navegador
+    const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        
     // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
     let users = JSON.parse(localStorage.getItem('roombar_users')) || [
-    { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
-    { username: 'gestor2', password: 'suasenhaaqui', role: 'admin', activeInRateio: false },
-    { username: 'Lincoln Sanches', password: '123', role: 'repositor', activeInRateio: true }
+        { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
+        { username: 'gestor2', password: 'suasenhaaqui', role: 'admin', activeInRateio: false },
+        { username: 'Lincoln Sanches', password: '123', role: 'repositor', activeInRateio: true }
     ];
 
     let historyLogs = JSON.parse(localStorage.getItem('roombar_history')) || [];
@@ -737,29 +731,29 @@ if (window.supabase) {
     }
 
     function toggleScreens(screen) {
-      document.getElementById('authScreen').style.display = screen === 'login' ? 'block' : 'none';
-      document.getElementById('registerScreen').style.display = screen === 'register' ? 'block' : 'none';
+        document.getElementById('authScreen').style.display = screen === 'login' ? 'block' : 'none';
+        document.getElementById('registerScreen').style.display = screen === 'register' ? 'block' : 'none';
     }
 
     function handleRegister(event) {
-  event.preventDefault();
-  const user = document.getElementById('regUser').value.trim();
-  const pass = document.getElementById('regPass').value.trim();
-  const role = document.getElementById('regRole') ? document.getElementById('regRole').value : 'repositor';
+        event.preventDefault();
+        const user = document.getElementById('regUser').value.trim();
+        const pass = document.getElementById('regPass').value.trim();
+        const role = document.getElementById('regRole') ? document.getElementById('regRole').value : 'repositor';
 
-  if (users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
-    alert('Usuário já cadastrado!');
-    return;
-  }
+        if (users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+            alert('Usuário já cadastrado!');
+            return;
+        }
 
-  const isRepositor = role === 'repositor';
-  const newUser = { username: user, password: pass, role: role, activeInRateio: isRepositor };
-  
-  users.push(newUser);
-  localStorage.setItem('roombar_users', JSON.stringify(users));
+        const isRepositor = role === 'repositor';
+        const newUser = { username: user, password: pass, role: role, activeInRateio: isRepositor };
+        
+        users.push(newUser);
+        localStorage.setItem('roombar_users', JSON.stringify(users));
 
-  alert(`Conta de ${role === 'admin' ? 'Gestor' : 'Repositor'} criada com sucesso!`);
-  loginUser(newUser);
+        alert(`Conta de ${role === 'admin' ? 'Gestor' : 'Repositor'} criada com sucesso!`);
+        loginUser(newUser);
     }
 
     function handleLogin(e) {
@@ -777,11 +771,11 @@ if (window.supabase) {
     }
 
     function loginUser(userObj) {
-      currentUserObj = userObj;
-      currentUser = userObj.username;
-      localStorage.setItem('currentUserObj', JSON.stringify(userObj));
-      localStorage.setItem('bourbon_user', userObj.username);
-      checkAuth();
+        currentUserObj = userObj;
+        currentUser = userObj.username;
+        localStorage.setItem('currentUserObj', JSON.stringify(userObj));
+        localStorage.setItem('bourbon_user', userObj.username);
+        checkAuth();
     }
 
     function usarRepositoresCadastradosParaRateio(inputId) {
