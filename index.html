@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check-in de Minibar - Bourbon Atibaia</title>
+    <!-- Supabase Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract OCR via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- Leitor de Excel (SheetJS) -->
@@ -501,30 +503,30 @@
     </div>
 
     <!-- Tela de Cadastro Atualizada com Seletor de Perfil -->
-<div id="registerScreen" class="auth-container" style="display: none;">
-  <h2>Cadastrar Novo Usuário</h2>
-  <form onsubmit="handleRegister(event)">
-    <div class="input-group">
-      <label for="regUser">Usuário / Matrícula</label>
-      <input type="text" id="regUser" required placeholder="Ex: repositor1 ou gestor1">
+    <div id="registerScreen" class="auth-container" style="display: none;">
+      <h2>Cadastrar Novo Usuário</h2>
+      <form onsubmit="handleRegister(event)">
+        <div class="input-group">
+          <label for="regUser">Usuário / Matrícula</label>
+          <input type="text" id="regUser" required placeholder="Ex: repositor1 ou gestor1">
+        </div>
+        <div class="input-group">
+          <label for="regPass">Senha</label>
+          <input type="password" id="regPass" required placeholder="••••••••">
+        </div>
+        <div class="input-group">
+          <label for="regRole">Perfil de Acesso</label>
+          <select id="regRole" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+            <option value="repositor">Repositor (Entra no Rateio)</option>
+            <option value="admin">Gestor / Administrador</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit" style="margin-top: 10px;">Criar Conta</button>
+      </form>
+      <p style="text-align: center; margin-top: 15px;">
+        Já possui conta? <a href="#" onclick="toggleScreens('login')" style="color: #c5a059;">Voltar ao Login</a>
+      </p>
     </div>
-    <div class="input-group">
-      <label for="regPass">Senha</label>
-      <input type="password" id="regPass" required placeholder="••••••••">
-    </div>
-    <div class="input-group">
-      <label for="regRole">Perfil de Acesso</label>
-      <select id="regRole" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
-        <option value="repositor">Repositor (Entra no Rateio)</option>
-        <option value="admin">Gestor / Administrador</option>
-      </select>
-    </div>
-    <button type="submit" class="btn-submit" style="margin-top: 10px;">Criar Conta</button>
-  </form>
-  <p style="text-align: center; margin-top: 15px;">
-    Já possui conta? <a href="#" onclick="toggleScreens('login')" style="color: #c5a059;">Voltar ao Login</a>
-  </p>
-</div>
 
     <div id="mainContent" style="display: none; flex: 1; flex-direction: column;">
         <nav class="tabs">
@@ -705,6 +707,12 @@
 </div>
 
 <script>
+    // --- SUPABASE INITIALIZATION ---
+    const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
+    const SUPABASE_KEY = 'SUA_PUBLISHABLE_KEY_AQUI'; // Cole aqui a chave Publishable Key copiada do Supabase
+
+    const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
     // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
     let users = JSON.parse(localStorage.getItem('roombar_users')) || [
     { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
@@ -1185,7 +1193,7 @@
         }
     }
 
-    function salvarAuditoria() {
+    async function salvarAuditoria() {
         const room = document.getElementById('roomSelect').value.trim();
         const obs = document.getElementById('auditObs').value.trim();
 
@@ -1231,6 +1239,18 @@
             obs: obs,
             photo: currentCapturedPhoto
         };
+
+        // Salva na nuvem via Supabase se estiver configurado
+        if (supabase) {
+            try {
+                const { error } = await supabase
+                    .from('conferencias')
+                    .insert([{ quarto: room, dados: newAudit }]);
+                if (error) console.error('Erro ao salvar no Supabase:', error.message);
+            } catch (err) {
+                console.error('Falha de conexão com Supabase:', err);
+            }
+        }
 
         audits.unshift(newAudit);
         saveAudits();
