@@ -709,10 +709,11 @@
 <script>
     // --- SUPABASE INITIALIZATION ---
     const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_3rxtq1xZ82aTCtZXc-_lgA_wa4-uOtC'; // Cole aqui a chave Publishable Key copiada do Supabase
+    const SUPABASE_KEY = 'sb_publishable_3rxtq1xZ82aTCtZXc-_lgA_wa4-u0tO'; // Mantenha sua chave completa aqui
 
+    // Garante que o cliente é criado via objeto global do navegador
     const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
+        
     // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
     let users = JSON.parse(localStorage.getItem('roombar_users')) || [
     { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
