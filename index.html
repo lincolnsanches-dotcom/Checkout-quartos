@@ -1242,16 +1242,16 @@
         };
 
         // Salva na nuvem via Supabase se estiver configurado
-        if (supabase) {
-    try {
-        const { error } = await supabase
-            .from('conferencias')
-            .insert([{ quarto: room, dados: newAudit }]);
-        if (error) console.error('Erro ao salvar no Supabase:', error.message);
-    } catch (err) {
-        console.error('Falha de conexão com Supabase:', err);
-    }
-}
+        if (window.supabaseClient) {
+            try {
+                const { error } = await window.supabaseClient
+                    .from('conferencias')
+                    .insert([{ quarto: room, dados: newAudit }]);
+                if (error) console.error('Erro ao salvar no Supabase:', error.message);
+            } catch (err) {
+                console.error('Falha de conexão com Supabase:', err);
+            }
+        }
 
         audits.unshift(newAudit);
         saveAudits();
