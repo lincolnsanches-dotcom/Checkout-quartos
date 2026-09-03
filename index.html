@@ -712,8 +712,7 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdnFwa21hZnBnaGp6bmdkZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDA2NTksImV4cCI6MjEwNDAxNjY1OX0.xLSSlYBAhhvtPKuhjMRJofFJdXbgcsleRdaJ1HSn1ZU';
 
     // Cria a conexão e EXPOE globalmente no window para usar no Console
-    window.supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-    const supabase = window.supabaseClient;
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
     let users = JSON.parse(localStorage.getItem('roombar_users')) || [
