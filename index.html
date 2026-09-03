@@ -708,13 +708,18 @@
 
 <script>
     // --- SUPABASE INITIALIZATION ---
-    const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdnFwa21hZnBnaGp6bmdkZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDA2NTksImV4cCI6MjEwNDAxNjY1OX0.xLSSlYBAhhvtPKuhjMRJofFJdXbgcsleRdaJ1HSn1ZU';
+const SUPABASE_URL = 'https://xovqpkmafpghjzngddfk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdnFwa21hZnBnaGp6bmdkZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDA2NTksImV4cCI6MjEwNDAxNjY1OX0.xLSSlYBAhhvtPKuhjMRJofFJdXbgcsleRdaJ1HSn1ZU'; // Sua chave do Supabase
 
-    // Cria a variável globalmente no window com nome único para evitar conflito
-    window.supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-    var supabase = window.supabaseClient;   
-         
+// Força a criação na janela global (window)
+if (window.supabase) {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    var supabase = window.supabaseClient; // Suporte para código legado
+    console.log("Supabase inicializado com sucesso!");
+} else {
+    console.error("Erro: A biblioteca do Supabase não foi carregada no HTML.");
+}   
+
     // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
     let users = JSON.parse(localStorage.getItem('roombar_users')) || [
     { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
