@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in de Minibar - Bourbon Atibaia</title>
+    <!-- Tesseract OCR via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Leitor de Excel (SheetJS) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bourbon-green: #00463f;
+            --bourbon-gold: #c5a059;
+            --bourbon-light: #f4f6f8;
+            --bourbon-dark: #1a1a1a;
+            --bourbon-gray: #e0e0e0;
+            --danger-color: #d9534f;
+            --success-color: #2e7d32;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bourbon-light);
+            color: var(--bourbon-dark);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        header {
+            background-color: var(--bourbon-green);
+            color: white;
+            padding: 20px 15px 15px 15px;
+            text-align: center;
+            border-bottom: 3px solid var(--bourbon-gold);
+            position: relative;
+        }
+
+        .logo-container {
+            margin-bottom: 10px;
+        }
+
+        .logo-placeholder {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: var(--bourbon-gold);
+            text-transform: uppercase;
+        }
+
+        .logo-img {
+            max-width: 160px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .user-bar {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 8px 15px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ddd;
+        }
+
+        .user-bar strong {
+            color: #fff;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        nav.tabs {
+            display: flex;
+            background-color: var(--bourbon-green);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 5px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            color: white;
+            border-bottom-color: var(--bourbon-gold);
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .tab-badge {
+            background-color: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        main {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .auth-container {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .auth-container h2 {
+            margin-bottom: 20px;
+            color: var(--bourbon-green);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            border-color: var(--bourbon-green);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bourbon-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #002d24;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--bourbon-green);
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--bourbon-light);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--bourbon-gray);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .card-pending {
+            border-left: 4px solid var(--danger-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-occupied {
+            border-left: 4px solid var(--bourbon-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-info h4 {
+            font-size: 16px;
+            color: var(--bourbon-dark);
+        }
+
+        .room-info p {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .btn-action {
+            background-color: var(--bourbon-green);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .camera-section {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #video {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .camera-controls {
+            padding: 10px;
+            background: rgba(0,0,0,0.8);
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .btn-cam {
+            background: var(--bourbon-gold);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .ocr-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .products-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bourbon-light);
+            border-radius: 6px;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .product-price {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-qty {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--bourbon-green);
+            background: white;
+            color: var(--bourbon-green);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-value {
+            font-weight: bold;
+            width: 20px;
+            text-align: center;
+        }
+
+        .report-item {
+            border-left: 4px solid var(--bourbon-green);
+            margin-bottom: 10px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .report-room {
+            font-weight: bold;
+            color: var(--bourbon-green);
+        }
+
+        .report-date {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .report-details {
+            font-size: 12px;
+            color: #444;
+        }
+
+        .report-total {
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            text-align: right;
+            color: var(--bourbon-dark);
+        }
+
+        .manager-product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--bourbon-gray);
+        }
+
+        .manager-product-item:last-child {
+            border-bottom: none;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c9302c;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 30px 10px;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal img {
+            max-width: 90%;
+            max-height: 80%;
+            border-radius: 8px;
+        }
+
+        footer {
+            background-color: var(--bourbon-green);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 10px;
+            font-size: 11px;
+            border-top: 2px solid var(--bourbon-gold);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo-container">
+            <img src="logo.png" alt="Bourbon Atibaia Resort" class="logo-img" onerror="this.style.display='none'; document.getElementById('logoText').style.display='block';">
+            <div id="logoText" class="logo-placeholder" style="display: none;">Bourbon<br><span style="font-size: 12px; font-weight: normal;">Atibaia Resort</span></div>
+        </div>
+        <h1 style="color: #c5a059; font-size: 14px;">Gestão Room Bar</h1>
+    </header>
+
+    <div id="userBar" class="user-bar" style="display: none;">
+        <span>👤 Usuário: <strong id="userName">--</strong> <span id="userRoleBadge" style="font-size: 10px; background: var(--bourbon-gold); padding: 2px 5px; border-radius: 3px; color: #000; margin-left: 5px;"></span></span>
+        <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+
+    <div id="authScreen" class="auth-container">
+        <h2>Acesso ao Sistema</h2>
+        <form onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label for="loginUser">Usuário / Matrícula</label>
+                <input type="text" id="loginUser" placeholder="Ex: repositor1 ou admin" required>
+            </div>
+            <div class="input-group">
+                <label for="loginPass">Senha</label>
+                <input type="password" id="loginPass" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-submit">Entrar</button>
+        </form>
+        <p style="text-align: center; margin-top: 15px;">
+            Não tem uma conta? <a href="#" onclick="toggleScreens('register')" style="color: #c5a059;">Cadastre-se para o Rateio</a>
+        </p>
+    </div>
+
+    <!-- Tela de Cadastro Atualizada com Seletor de Perfil -->
+<div id="registerScreen" class="auth-container" style="display: none;">
+  <h2>Cadastrar Novo Usuário</h2>
+  <form onsubmit="handleRegister(event)">
+    <div class="input-group">
+      <label for="regUser">Usuário / Matrícula</label>
+      <input type="text" id="regUser" required placeholder="Ex: repositor1 ou gestor1">
+    </div>
+    <div class="input-group">
+      <label for="regPass">Senha</label>
+      <input type="password" id="regPass" required placeholder="••••••••">
+    </div>
+    <div class="input-group">
+      <label for="regRole">Perfil de Acesso</label>
+      <select id="regRole" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        <option value="repositor">Repositor (Entra no Rateio)</option>
+        <option value="admin">Gestor / Administrador</option>
+      </select>
+    </div>
+    <button type="submit" class="btn-submit" style="margin-top: 10px;">Criar Conta</button>
+  </form>
+  <p style="text-align: center; margin-top: 15px;">
+    Já possui conta? <a href="#" onclick="toggleScreens('login')" style="color: #c5a059;">Voltar ao Login</a>
+  </p>
+</div>
+
+    <div id="mainContent" style="display: none; flex: 1; flex-direction: column;">
+        <nav class="tabs">
+            <button class="tab-button active" onclick="switchTab('aChecar')">
+                ⏳ Check-in <span id="badgePending" class="tab-badge" style="display: none;">0</span>
+            </button>
+            <button class="tab-button" onclick="switchTab('ocupados')">
+                🏠 Ocupados <span id="badgeOccupied" class="tab-badge" style="display: none; background-color: var(--bourbon-gold);">0</span>
+            </button>
+            <button class="tab-button" onclick="switchTab('lancar')">
+                📝 Lançar
+            </button>
+            <button class="tab-button" onclick="switchTab('auditados')">
+                📋 Histórico
+            </button>
+            <button class="tab-button" onclick="switchTab('produtos')">
+                🏷️ Produtos
+            </button>
+        </nav>
+
+        <main>
+            <!-- Guia 1: Check-in Pendentes -->
+            <div id="aChecarTab" class="tab-content active">
+                <h3 class="step-title">Prioridades de Check-in</h3>
+                
+                <div class="input-group">
+                    <label style="font-weight: bold; color: var(--bourbon-green);">Importar Planilha de Check-out (.xls / .xlsx / .csv):</label>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: block; margin-top: 5px; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #fff;" onchange="processarArquivoExcel(event, 'pending')">
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="bulkRooms">Ou digite/cole a lista de quartos:</label>
+                    <textarea id="bulkRooms" rows="2" placeholder="Ex: 101, 204, 305"></textarea>
+                    <button class="btn-submit btn-secondary" onclick="adicionarQuartosPendentes()">+ Adicionar Pendentes</button>
+                </div>
+
+                <!-- Módulo de Distribuição de Equipe -->
+                <div style="background: #eef5f3; border: 1px solid var(--bourbon-green); padding: 12px; border-radius: 8px; margin-top: 15px;">
+                    <h4 style="color: var(--bourbon-green); font-size: 13px; margin-bottom: 8px;">👥 Divisão de Escala entre Repositores</h4>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <input type="text" id="activeStaff" placeholder="Nomes separados por vírgula (Ex: Joao, Hailton, Allison)">
+                    </div>
+                    <button class="btn-submit" style="font-size: 13px; padding: 8px;" onclick="distribuirQuartos()">Dividir Quartos Igualmente</button>
+                    <button class="btn-submit btn-secondary" style="font-size: 11px; padding: 5px; margin-top: 5px;" onclick="usarRepositoresCadastradosParaRateio('activeStaff')">⚡ Usar Repositores Cadastrados no Sistema</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                    <h3 class="step-title" style="margin: 0; border-bottom: none;">Quartos Aguardando Checagem</h3>
+                    <select id="filterStaff" onchange="renderPendingList()" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;">
+                        <option value="ALL">Exibir Todos</option>
+                        <option value="MINE">Meus Quartos</option>
+                    </select>
+                </div>
+                <div id="pendingList" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Guia 2: Ocupados (Para Abastecimento) -->
+            <div id="ocupadosTab" class="tab-content">
+                <h3 class="step-title">Quartos Ocupados (Abastecimento)</h3>
+                
+                <div class="input-group">
+                    <label style="font-weight: bold; color: var(--bourbon-green);">Importar Relatório de Ocupados (.xls / .xlsx / .csv):</label>
+                    <input type="file" id="excelOccupiedInput" accept=".xlsx, .xls, .csv" style="display: block; margin-top: 5px; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #fff;" onchange="processarArquivoExcel(event, 'occupied')">
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="bulkOccupied">Ou digite/cole a lista de ocupados:</label>
+                    <textarea id="bulkOccupied" rows="2" placeholder="Ex: 102, 105, 210"></textarea>
+                    <button class="btn-submit btn-secondary" onclick="adicionarQuartosOcupados()">+ Adicionar Ocupados</button>
+                </div>
+
+                <!-- Módulo de Distribuição de Equipe para Ocupados -->
+                <div style="background: #fdf8ed; border: 1px solid var(--bourbon-gold); padding: 12px; border-radius: 8px; margin-top: 15px;">
+                    <h4 style="color: var(--bourbon-green); font-size: 13px; margin-bottom: 8px;">👥 Divisão de Escala de Ocupados</h4>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <input type="text" id="activeStaffOccupied" placeholder="Nomes separados por vírgula (Ex: Joao, Hailton, Allison)">
+                    </div>
+                    <button class="btn-submit" style="font-size: 13px; padding: 8px; background-color: var(--bourbon-gold);" onclick="distribuirQuartosOcupados()">Dividir Ocupados Igualmente</button>
+                    <button class="btn-submit btn-secondary" style="font-size: 11px; padding: 5px; margin-top: 5px;" onclick="usarRepositoresCadastradosParaRateio('activeStaffOccupied')">⚡ Usar Repositores Cadastrados no Sistema</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px;">
+                    <h3 class="step-title" style="margin: 0; border-bottom: none;">Lista de Ocupados</h3>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="filterStaffOccupied" onchange="renderOccupiedList()" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;">
+                            <option value="ALL">Exibir Todos</option>
+                            <option value="MINE">Meus Quartos</option>
+                        </select>
+                        <button class="btn-action btn-danger btn-sm" onclick="limparOcupados()">Limpar Lista</button>
+                    </div>
+                </div>
+                <div id="occupiedList"></div>
+            </div>
+
+            <!-- Guia Lançamento -->
+            <div id="lancarTab" class="tab-content">
+                <h3 class="step-title">Lançar Consumo / Abastecimento</h3>
+                
+                <div class="input-group">
+                    <label for="roomSelect">Selecione ou Digite o Quarto</label>
+                    <input type="text" id="roomSelect" placeholder="Ex: 101" list="roomsDatalist">
+                    <datalist id="roomsDatalist"></datalist>
+                </div>
+
+                <div class="camera-section">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="camera-controls">
+                        <button type="button" class="btn-cam" onclick="startCamera()">📷 Abrir Câmera</button>
+                        <button type="button" class="btn-cam" onclick="capturePhoto()">⚡ Tirar Foto (OCR)</button>
+                    </div>
+                </div>
+                <div id="ocrStatus" class="ocr-status">Aponte a câmera para a comanda ou ficha do minibar...</div>
+                <div id="photoPreviewContainer" style="display: none; margin-bottom: 15px; text-align: center;">
+                    <p style="font-size: 11px; color: #555; margin-bottom: 5px;">Foto do Comprovante Salva:</p>
+                    <img id="photoPreview" style="max-width: 100%; max-height: 120px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer;" onclick="openModal(this.src)">
+                </div>
+
+                <h3 class="step-title" style="margin-top: 20px;">Itens Consumidos</h3>
+                <div id="productsList" class="products-grid"></div>
+
+                <div class="input-group">
+                    <label for="auditObs">Observações (opcional)</label>
+                    <textarea id="auditObs" rows="2" placeholder="Ex: Lacre do minibar violado, abastecimento de rotina..."></textarea>
+                </div>
+
+                <button class="btn-submit" onclick="salvarAuditoria()">Finalizar e Enviar Lançamento</button>
+            </div>
+
+            <!-- Guia Histórico -->
+            <div id="auditadosTab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 class="step-title" style="margin-bottom: 0; border-bottom: none;">Histórico de Registros</h3>
+                    <button class="btn-action btn-secondary btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+                </div>
+    
+                <!-- Filtros de Busca e Data -->
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                    <div style="flex: 2;">
+                        <input type="text" id="searchAudit" placeholder="Buscar por quarto ou repositor..." onkeyup="renderAuditados()">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="date" id="filterDate" onchange="renderAuditados()" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; outline: none;">
+                    </div>
+                </div>
+
+                <div id="auditadosList"></div>
+            </div>
+
+            <!-- Guia Produtos -->
+            <div id="produtosTab" class="tab-content">
+                <h3 class="step-title">Cadastrar Novo Item no Minibar</h3>
+                <form onsubmit="cadastrarProduto(event)">
+                    <div class="input-group">
+                        <label for="prodName">Nome do Produto</label>
+                        <input type="text" id="prodName" placeholder="Ex: Água sem Gás 500ml" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="prodPrice">Preço Unitário (R$)</label>
+                        <input type="number" id="prodPrice" step="0.01" placeholder="Ex: 8.50" required>
+                    </div>
+                    <button type="submit" class="btn-submit">+ Cadastrar Produto</button>
+                </form>
+
+                <h3 class="step-title" style="margin-top: 25px;">Itens Ativos no Minibar</h3>
+                <div id="managerProductsList"></div>
+            </div>
+        </main>
+        
+        <footer style="background-color: transparent; color: #777777; font-size: 10px; text-align: center; padding: 20px 0;">
+            Desenvolvido por <span style="color: #c5a059; font-weight: bold;">Lincoln Sanches</span> • Todos os direitos reservados
+        </footer>
+    </div>
+</div>
+
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <img id="modalImg" src="">
+</div>
+
+<script>
+    // --- BANCO DE DADOS LOCAL E CONTROLE DE PERFIS ---
+    let users = JSON.parse(localStorage.getItem('roombar_users')) || [
+    { username: 'admin', password: '123', role: 'admin', activeInRateio: false },
+    { username: 'gestor2', password: 'suasenhaaqui', role: 'admin', activeInRateio: false },
+    { username: 'Lincoln Sanches', password: '123', role: 'repositor', activeInRateio: true }
+    ];
+
+    let historyLogs = JSON.parse(localStorage.getItem('roombar_history')) || [];
+    let currentUserObj = JSON.parse(localStorage.getItem('currentUserObj')) || null;
+    let currentUser = currentUserObj ? currentUserObj.username : null;
+
+    // Salva contas iniciais se o armazenamento estivesse vazio
+    if (!localStorage.getItem('roombar_users')) {
+        localStorage.setItem('roombar_users', JSON.stringify(users));
+    }
+
+    function toggleScreens(screen) {
+      document.getElementById('authScreen').style.display = screen === 'login' ? 'block' : 'none';
+      document.getElementById('registerScreen').style.display = screen === 'register' ? 'block' : 'none';
+    }
+
+    function handleRegister(event) {
+  event.preventDefault();
+  const user = document.getElementById('regUser').value.trim();
+  const pass = document.getElementById('regPass').value.trim();
+  const role = document.getElementById('regRole') ? document.getElementById('regRole').value : 'repositor';
+
+  if (users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+    alert('Usuário já cadastrado!');
+    return;
+  }
+
+  const isRepositor = role === 'repositor';
+  const newUser = { username: user, password: pass, role: role, activeInRateio: isRepositor };
+  
+  users.push(newUser);
+  localStorage.setItem('roombar_users', JSON.stringify(users));
+
+  alert(`Conta de ${role === 'admin' ? 'Gestor' : 'Repositor'} criada com sucesso!`);
+  loginUser(newUser);
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const userVal = document.getElementById('loginUser').value.trim();
+        const passVal = document.getElementById('loginPass').value.trim();
+
+        const foundUser = users.find(u => u.username.toLowerCase() === userVal.toLowerCase() && u.password === passVal);
+
+        if (foundUser) {
+            loginUser(foundUser);
+        } else {
+            alert('Usuário ou senha incorretos! Tente novamente ou cadastre uma nova conta.');
+        }
+    }
+
+    function loginUser(userObj) {
+      currentUserObj = userObj;
+      currentUser = userObj.username;
+      localStorage.setItem('currentUserObj', JSON.stringify(userObj));
+      localStorage.setItem('bourbon_user', userObj.username);
+      checkAuth();
+    }
+
+    function usarRepositoresCadastradosParaRateio(inputId) {
+        const repositores = users.filter(u => u.role === 'repositor' && u.activeInRateio).map(u => u.username);
+        if (repositores.length === 0) {
+            alert('Nenhum repositor cadastrado encontrado.');
+            return;
+        }
+        document.getElementById(inputId).value = repositores.join(', ');
+    }
+
+    // --- PRODUTOS, QUARTOS E SESSÃO ORIGINAL ---
+    const defaultProducts = [
+        { id: 1, name: 'Água Mineral sem Gás 500ml', price: 8.00 },
+        { id: 2, name: 'Água Mineral com Gás 500ml', price: 8.00 },
+        { id: 3, name: 'Refrigerante Lata 350ml', price: 10.00 },
+        { id: 4, name: 'Cerveja Long Neck 330ml', price: 14.00 },
+        { id: 5, name: 'Suco Lata 300ml', price: 10.00 },
+        { id: 6, name: 'Snack / Castanha 50g', price: 12.00 },
+        { id: 7, name: 'Chocolate 40g', price: 9.00 }
+    ];
+
+    let products = JSON.parse(localStorage.getItem('bourbon_products')) || defaultProducts;
+    
+    let rawPending = JSON.parse(localStorage.getItem('bourbon_pending_rooms')) || ['104', '208', '312'];
+    let pendingRooms = rawPending.map(item => typeof item === 'object' ? item : { room: item, assignedTo: null });
+
+    let rawOccupied = JSON.parse(localStorage.getItem('bourbon_occupied_rooms')) || [];
+    let occupiedRooms = rawOccupied.map(item => typeof item === 'object' ? item : { room: item, assignedTo: null });
+
+    let audits = JSON.parse(localStorage.getItem('bourbon_audits')) || [];
+
+    let currentQuantities = {};
+    let currentCapturedPhoto = null;
+    let stream = null;
+
+    window.onload = function() {
+        checkAuth();
+        saveProductsToStorage();
+    };
+
+    function saveProductsToStorage() {
+        localStorage.setItem('bourbon_products', JSON.stringify(products));
+    }
+
+    function savePendingRooms() {
+        localStorage.setItem('bourbon_pending_rooms', JSON.stringify(pendingRooms));
+        updateBadges();
+    }
+
+    function saveOccupiedRooms() {
+        localStorage.setItem('bourbon_occupied_rooms', JSON.stringify(occupiedRooms));
+        updateBadges();
+    }
+
+    function saveAudits() {
+        localStorage.setItem('bourbon_audits', JSON.stringify(audits));
+    }
+
+    function updateBadges() {
+        const badgePending = document.getElementById('badgePending');
+        if (pendingRooms.length > 0) {
+            badgePending.innerText = pendingRooms.length;
+            badgePending.style.display = 'inline-block';
+        } else {
+            badgePending.style.display = 'none';
+        }
+
+        const badgeOccupied = document.getElementById('badgeOccupied');
+        if (occupiedRooms.length > 0) {
+            badgeOccupied.innerText = occupiedRooms.length;
+            badgeOccupied.style.display = 'inline-block';
+        } else {
+            badgeOccupied.style.display = 'none';
+        }
+    }
+
+    function checkAuth() {
+        if (currentUserObj) {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'flex';
+            document.getElementById('userBar').style.display = 'flex';
+            document.getElementById('userName').innerText = currentUserObj.username;
+            
+            const badge = document.getElementById('userRoleBadge');
+            badge.innerText = currentUserObj.role === 'admin' ? 'Gestor' : 'Repositor';
+            
+            initApp();
+        } else {
+            document.getElementById('authScreen').style.display = 'block';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('userBar').style.display = 'none';
+        }
+    }
+
+    function logout() {
+        currentUserObj = null;
+        currentUser = null;
+        localStorage.removeItem('currentUserObj');
+        localStorage.removeItem('bourbon_user');
+        stopCamera();
+        checkAuth();
+    }
+
+    function initApp() {
+        renderPendingList();
+        renderOccupiedList();
+        renderProductsForLancar();
+        renderAuditados();
+        renderManagerProducts();
+        updateBadges();
+        updateDatalist();
+    }
+
+    function switchTab(tabName) {
+        const tabs = ['aChecar', 'ocupados', 'lancar', 'auditados', 'produtos'];
+        tabs.forEach(t => {
+            document.getElementById(t + 'Tab').classList.remove('active');
+        });
+        
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(b => b.classList.remove('active'));
+
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        
+        const btnIndex = tabs.indexOf(tabName);
+        if (btnIndex !== -1) buttons[btnIndex].classList.add('active');
+
+        if (tabName !== 'lancar') {
+            stopCamera();
+        }
+    }
+
+    // --- CHECK-IN (PENDENTES & DIVISÃO) ---
+    function distribuirQuartos() {
+        const staffInput = document.getElementById('activeStaff').value.trim();
+        if (!staffInput) {
+            alert("Digite ao menos um nome de repositor.");
+            return;
+        }
+
+        const equipe = staffInput.split(/[\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+        if (equipe.length === 0 || pendingRooms.length === 0) {
+            alert("Certifique-se de ter quartos pendentes e nomes válidos informados.");
+            return;
+        }
+
+        pendingRooms.sort((a, b) => parseInt(a.room, 10) - parseInt(b.room, 10));
+
+        pendingRooms.forEach((item, index) => {
+            item.assignedTo = equipe[index % equipe.length];
+        });
+
+        savePendingRooms();
+        renderPendingList();
+        alert(`${pendingRooms.length} quartos distribuídos entre: ${equipe.join(', ')}.`);
+    }
+
+    function renderPendingList() {
+        const listContainer = document.getElementById('pendingList');
+        const filter = document.getElementById('filterStaff').value;
+        listContainer.innerHTML = '';
+
+        let listaFiltrada = pendingRooms;
+        if (filter === 'MINE' && currentUser) {
+            listaFiltrada = pendingRooms.filter(r => r.assignedTo && r.assignedTo.toLowerCase() === currentUser.toLowerCase());
+        }
+
+        if (listaFiltrada.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state">Nenhum quarto encontrado para este filtro.</div>';
+            return;
+        }
+
+        listaFiltrada.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card card-pending';
+            card.innerHTML = `
+                <div class="room-info">
+                    <h4>Quarto ${item.room}</h4>
+                    <p>Responsável: <strong>${item.assignedTo ? item.assignedTo : 'Não atribuído'}</strong></p>
+                </div>
+                <button class="btn-action" onclick="iniciarConferencia('${item.room}')">Conferir</button>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    function adicionarQuartosPendentes() {
+        const input = document.getElementById('bulkRooms');
+        const valor = input.value.trim();
+        if (!valor) return;
+
+        const novos = valor.split(/[\n,]+/).map(q => q.trim()).filter(q => q.length > 0);
+        novos.forEach(q => {
+            if (!pendingRooms.some(item => item.room === q)) {
+                pendingRooms.push({ room: q, assignedTo: null });
+            }
+        });
+
+        savePendingRooms();
+        renderPendingList();
+        updateDatalist();
+        input.value = '';
+    }
+
+    // --- OCUPADOS (ABASTECIMENTO & DIVISÃO) ---
+    function distribuirQuartosOcupados() {
+        const staffInput = document.getElementById('activeStaffOccupied').value.trim();
+        if (!staffInput) {
+            alert("Digite ao menos um nome de repositor.");
+            return;
+        }
+
+        const equipe = staffInput.split(/[\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+        if (equipe.length === 0 || occupiedRooms.length === 0) {
+            alert("Certifique-se de ter quartos ocupados e nomes válidos informados.");
+            return;
+        }
+
+        occupiedRooms.sort((a, b) => parseInt(a.room, 10) - parseInt(b.room, 10));
+
+        occupiedRooms.forEach((item, index) => {
+            item.assignedTo = equipe[index % equipe.length];
+        });
+
+        saveOccupiedRooms();
+        renderOccupiedList();
+        alert(`${occupiedRooms.length} quartos ocupados distribuídos entre: ${equipe.join(', ')}.`);
+    }
+
+    function renderOccupiedList() {
+        const container = document.getElementById('occupiedList');
+        const filter = document.getElementById('filterStaffOccupied') ? document.getElementById('filterStaffOccupied').value : 'ALL';
+        container.innerHTML = '';
+
+        let listaFiltrada = occupiedRooms;
+        if (filter === 'MINE' && currentUser) {
+            listaFiltrada = occupiedRooms.filter(r => r.assignedTo && r.assignedTo.toLowerCase() === currentUser.toLowerCase());
+        }
+
+        if (listaFiltrada.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum quarto ocupado encontrado para este filtro.</div>';
+            return;
+        }
+
+        listaFiltrada.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card card-occupied';
+            card.innerHTML = `
+                <div class="room-info">
+                    <h4>Quarto ${item.room}</h4>
+                    <p>Responsável: <strong>${item.assignedTo ? item.assignedTo : 'Não atribuído'}</strong></p>
+                </div>
+                <button class="btn-action" onclick="iniciarConferencia('${item.room}')">Abastecer</button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function adicionarQuartosOcupados() {
+        const input = document.getElementById('bulkOccupied');
+        const valor = input.value.trim();
+        if (!valor) return;
+
+        const novos = valor.split(/[\n,]+/).map(q => q.trim()).filter(q => q.length > 0);
+        novos.forEach(q => {
+            if (!occupiedRooms.some(item => item.room === q)) {
+                occupiedRooms.push({ room: q, assignedTo: null });
+            }
+        });
+
+        saveOccupiedRooms();
+        renderOccupiedList();
+        updateDatalist();
+        input.value = '';
+    }
+
+    function limparOcupados() {
+        if (confirm('Deseja realmente limpar a lista de quartos ocupados?')) {
+            occupiedRooms = [];
+            saveOccupiedRooms();
+            renderOccupiedList();
+            updateDatalist();
+        }
+    }
+
+    function iniciarConferencia(room) {
+        document.getElementById('roomSelect').value = room;
+        switchTab('lancar');
+    }
+
+    function updateDatalist() {
+        const datalist = document.getElementById('roomsDatalist');
+        datalist.innerHTML = '';
+        
+        const quartosPendentes = pendingRooms.map(r => r.room);
+        const quartosOcupados = occupiedRooms.map(r => r.room);
+        const todosQuartos = [...new Set([...quartosPendentes, ...quartosOcupados])];
+        
+        todosQuartos.forEach(room => {
+            const opt = document.createElement('option');
+            opt.value = room;
+            datalist.appendChild(opt);
+        });
+    }
+
+    // --- LANÇAR & CÂMERA ---
+    function renderProductsForLancar() {
+        const container = document.getElementById('productsList');
+        container.innerHTML = '';
+
+        products.forEach(p => {
+            if (!currentQuantities[p.id]) currentQuantities[p.id] = 0;
+
+            const item = document.createElement('div');
+            item.className = 'product-item';
+            item.innerHTML = `
+                <div class="product-info">
+                    <div class="product-title">${p.name}</div>
+                    <div class="product-price">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                </div>
+                <div class="quantity-controls">
+                    <button class="btn-qty" onclick="changeQty(${p.id}, -1)">-</button>
+                    <span class="qty-value" id="qty-${p.id}">${currentQuantities[p.id]}</span>
+                    <button class="btn-qty" onclick="changeQty(${p.id}, 1)">+</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function changeQty(prodId, delta) {
+        let current = currentQuantities[prodId] || 0;
+        current += delta;
+        if (current < 0) current = 0;
+        currentQuantities[prodId] = current;
+        document.getElementById(`qty-${prodId}`).innerText = current;
+    }
+
+    async function startCamera() {
+        const video = document.getElementById('video');
+        const status = document.getElementById('ocrStatus');
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' },
+                audio: false
+            });
+            video.srcObject = stream;
+            status.innerText = "Câmera ativa. Posicione sobre a comanda e clique em 'Tirar Foto'.";
+        } catch (err) {
+            alert("Erro ao acessar a câmera: " + err.message);
+            status.innerText = "Erro ao acessar a câmera. Verifique as permissões.";
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const status = document.getElementById('ocrStatus');
+
+        if (!stream) {
+            alert("Ative a câmera primeiro!");
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        currentCapturedPhoto = canvas.toDataURL('image/jpeg');
+        document.getElementById('photoPreview').src = currentCapturedPhoto;
+        document.getElementById('photoPreviewContainer').style.display = 'block';
+
+        status.innerText = "Processando OCR...";
+
+        Tesseract.recognize(
+            currentCapturedPhoto,
+            'por',
+            { logger: m => console.log(m) }
+        ).then(({ data: { text } }) => {
+            status.innerText = "OCR Concluído!";
+            processOcrText(text);
+        }).catch(err => {
+            status.innerText = "Foto capturada, erro ao ler texto via OCR.";
+            console.error(err);
+        });
+    }
+
+    function processOcrText(text) {
+        const lower = text.toLowerCase();
+        let detectados = 0;
+
+        products.forEach(p => {
+            const keywords = p.name.toLowerCase().split(' ');
+            const mainWord = keywords[0]; 
+            if (mainWord.length > 3 && lower.includes(mainWord)) {
+                currentQuantities[p.id] = (currentQuantities[p.id] || 0) + 1;
+                document.getElementById(`qty-${p.id}`).innerText = currentQuantities[p.id];
+                detectados++;
+            }
+        });
+
+        if (detectados > 0) {
+            alert(`OCR identificou sugestões para ${detectados} item(ns). Verifique as quantidades!`);
+        }
+    }
+
+    function salvarAuditoria() {
+        const room = document.getElementById('roomSelect').value.trim();
+        const obs = document.getElementById('auditObs').value.trim();
+
+        if (!room) {
+            alert("Por favor, informe ou selecione o número do quarto.");
+            return;
+        }
+
+        const quartosPendentes = pendingRooms.map(r => r.room);
+        const quartosOcupados = occupiedRooms.map(r => r.room);
+        const todosQuartosValidos = [...new Set([...quartosPendentes, ...quartosOcupados])];
+
+        if (!todosQuartosValidos.includes(room)) {
+            alert(`O Quarto ${room} não consta nas listas ativas (Check-in ou Ocupados). Importe ou adicione o quarto antes de lançar.`);
+            return;
+        }
+
+        let itemsConsumidos = [];
+        let totalVal = 0;
+
+        products.forEach(p => {
+            const qty = currentQuantities[p.id] || 0;
+            if (qty > 0) {
+                const subtotal = qty * p.price;
+                itemsConsumidos.push({
+                    productId: p.id,
+                    name: p.name,
+                    price: p.price,
+                    qty: qty,
+                    subtotal: subtotal
+                });
+                totalVal += subtotal;
+            }
+        });
+
+        const newAudit = {
+            id: Date.now(),
+            room: room,
+            repositor: currentUser,
+            timestamp: new Date().toLocaleString('pt-BR'),
+            items: itemsConsumidos,
+            total: totalVal,
+            obs: obs,
+            photo: currentCapturedPhoto
+        };
+
+        audits.unshift(newAudit);
+        saveAudits();
+
+        pendingRooms = pendingRooms.filter(r => r.room !== room);
+        savePendingRooms();
+
+        document.getElementById('roomSelect').value = '';
+        document.getElementById('auditObs').value = '';
+        currentQuantities = {};
+        currentCapturedPhoto = null;
+        document.getElementById('photoPreviewContainer').style.display = 'none';
+        renderProductsForLancar();
+        stopCamera();
+
+        alert(`Lançamento do Quarto ${room} registrado!`);
+        renderPendingList();
+        renderAuditados();
+        switchTab('auditados');
+    }
+
+    // --- HISTÓRICO RESTREITO & EDIÇÃO DE DIVERGÊNCIAS ---
+    function renderAuditados() {
+        const container = document.getElementById('auditadosList');
+        const filterText = document.getElementById('searchAudit').value.toLowerCase();
+        const filterDateValue = document.getElementById('filterDate').value;
+        container.innerHTML = '';
+
+        let formattedFilterDate = '';
+        if (filterDateValue) {
+            const parts = filterDateValue.split('-');
+            formattedFilterDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        const filtrados = audits.filter(a => {
+            const isManager = currentUserObj && currentUserObj.role === 'admin';
+            const isMyRecord = a.repositor && a.repositor.toLowerCase() === currentUser.toLowerCase();
+            
+            // O GESTOR vê tudo. O REPOSITOR vê apenas o seu histórico próprio.
+            const hasPermission = isManager || isMyRecord;
+
+            const matchText = a.room.toLowerCase().includes(filterText) || 
+                              a.repositor.toLowerCase().includes(filterText);
+            
+            const matchDate = formattedFilterDate ? a.timestamp.includes(formattedFilterDate) : true;
+
+            return hasPermission && matchText && matchDate;
+        });
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum registro encontrado para a sua conta.</div>';
+            return;
+        }
+
+        filtrados.forEach(a => {
+            const card = document.createElement('div');
+            card.className = 'card report-item';
+
+            let itemsHtml = '';
+            if (a.items.length === 0) {
+                itemsHtml = '<em>Nenhum consumo (Conferido / Ok)</em>';
+            } else {
+                itemsHtml = a.items.map(i => `${i.qty}x ${i.name} (R$ ${i.subtotal.toFixed(2).replace('.', ',')})`).join('<br>');
+            }
+
+            card.innerHTML = `
+                <div class="report-header">
+                    <span class="report-room">Quarto ${a.room}</span>
+                    <span class="report-date">${a.timestamp}</span>
+                </div>
+                <div class="report-details">
+                    <strong>Repositor:</strong> ${a.repositor}<br>
+                    <strong>Lançamento:</strong><br>
+                    ${itemsHtml}
+                    ${a.obs ? `<br><strong>Obs:</strong> ${a.obs}` : ''}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <div>
+                        ${a.photo ? `<button class="btn-action btn-secondary btn-sm" onclick="openModal('${a.photo}')">📷 Ver Foto</button>` : ''}
+                        <button class="btn-action btn-sm" style="background-color: var(--bourbon-gold);" onclick="editarDivergencia(${a.id})">✏️ Corrigir Divergência</button>
+                    </div>
+                    <div class="report-total">Total: R$ ${a.total.toFixed(2).replace('.', ',')}</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function editarDivergencia(auditId) {
+        const targetAudit = audits.find(a => a.id === auditId);
+        if (!targetAudit) return;
+
+        const novaObs = prompt("Descreva a correção / ajuste de divergência para este lançamento:", targetAudit.obs || "");
+        if (novaObs !== null) {
+            targetAudit.obs = novaObs + " (Corrigido por: " + currentUser + ")";
+            saveAudits();
+            renderAuditados();
+            alert("Lançamento atualizado com sucesso!");
+        }
+    }
+
+    function exportarExcel() {
+        if (audits.length === 0) {
+            alert("Não há dados para exportar.");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,Quarto;Data/Hora;Repositor;Itens Consumidos;Total (R$);Observacoes\n";
+
+        audits.forEach(a => {
+            const itensStr = a.items.map(i => `${i.qty}x ${i.name}`).join(' | ') || 'Sem consumo';
+            const line = `"${a.room}";"${a.timestamp}";"${a.repositor}";"${itensStr}";"${a.total.toFixed(2)}";"${a.obs || ''}"`;
+            csvContent += line + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `minibar_bourbon_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- CADASTRAR PRODUTOS ---
+    function renderManagerProducts() {
+        const container = document.getElementById('managerProductsList');
+        container.innerHTML = '';
+
+        products.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'manager-product-item';
+            item.innerHTML = `
+                <div>
+                    <strong>${p.name}</strong><br>
+                    <span style="font-size: 12px; color: #666;">R$ ${p.price.toFixed(2).replace('.', ',')}</span>
+                </div>
+                <button class="btn-action btn-danger btn-sm" onclick="removerProduto(${p.id})">Excluir</button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function cadastrarProduto(e) {
+        e.preventDefault();
+        const name = document.getElementById('prodName').value.trim();
+        const price = parseFloat(document.getElementById('prodPrice').value);
+
+        if (name && !isNaN(price)) {
+            products.push({ id: Date.now(), name: name, price: price });
+            saveProductsToStorage();
+            renderManagerProducts();
+            renderProductsForLancar();
+
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            alert('Produto cadastrado com sucesso!');
+        }
+    }
+
+    function removerProduto(id) {
+        if (confirm("Deseja remover este produto?")) {
+            products = products.filter(p => p.id !== id);
+            saveProductsToStorage();
+            renderManagerProducts();
+            renderProductsForLancar();
+        }
+    }
+
+    function openModal(imgSrc) {
+        document.getElementById('modalImg').src = imgSrc;
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // --- IMPORTADOR DE EXCEL MULTIUSO ---
+    function processarArquivoExcel(event, tipo) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                let colIndexes = [];
+                let quartosEncontrados = [];
+
+                for (let r = 0; r < json.length; r++) {
+                    const row = json[r];
+                    if (!row) continue;
+                    
+                    for (let c = 0; c < row.length; c++) {
+                        if (row[c]) {
+                            const val = row[c].toString().trim().toLowerCase();
+                            if (val === 'uh' || val === 'bloco' || val === 'quarto' || val === 'uhs') {
+                                if (!colIndexes.includes(c)) {
+                                    colIndexes.push(c);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                json.forEach(row => {
+                    if (row) {
+                        if (colIndexes.length > 0) {
+                            colIndexes.forEach(colIdx => {
+                                if (row[colIdx]) {
+                                    const valor = row[colIdx].toString().trim();
+                                    if (/^\d{3,4}$/.test(valor)) {
+                                        quartosEncontrados.push(parseInt(valor, 10).toString());
+                                    }
+                                }
+                            });
+                        } else {
+                            row.forEach(cell => {
+                                if (cell) {
+                                    const valor = cell.toString().trim();
+                                    if (/^\d{3,4}$/.test(valor)) {
+                                        quartosEncontrados.push(parseInt(valor, 10).toString());
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+
+                quartosEncontrados = [...new Set(quartosEncontrados)];
+
+                if (quartosEncontrados.length === 0) {
+                    alert('Nenhum quarto foi identificado na planilha.');
+                    return;
+                }
+
+                if (tipo === 'pending') {
+                    document.getElementById('bulkRooms').value = quartosEncontrados.join(', ');
+                    adicionarQuartosPendentes();
+                } else if (tipo === 'occupied') {
+                    document.getElementById('bulkOccupied').value = quartosEncontrados.join(', ');
+                    adicionarQuartosOcupados();
+                }
+
+                alert(`Sucesso! ${quartosEncontrados.length} quartos importados.`);
+                event.target.value = '';
+            } catch (err) {
+                alert('Erro ao ler a planilha. Verifique o formato do arquivo.');
+                console.error(err);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+</script>
+
+</body>
+</html>
