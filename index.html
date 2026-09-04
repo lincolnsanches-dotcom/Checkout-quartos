@@ -13,7 +13,7 @@
     <style>
         :root {
             --bourbon-green: #00463f;
-            --bourbon-gold: #2e7d32;
+            --bourbon-gold: #c5a059;
             --bourbon-light: #f4f6f8;
             --bourbon-dark: #1a1a1a;
             --bourbon-gray: #e0e0e0;
@@ -261,9 +261,10 @@
             color: #777;
         }
 
+        /* Botão Ação alterado para Dourado com texto branco */
         .btn-action {
-            background-color: var(--bourbon-gold); /* MUDADO PARA DOURADO */
-            color: white;
+            background-color: var(--bourbon-gold) !important;
+            color: white !important;
             border: none;
             padding: 8px 12px;
             border-radius: 4px;
@@ -422,11 +423,11 @@
         }
 
         .btn-danger {
-            background-color: var(--danger-color);
+            background-color: var(--danger-color) !important;
         }
 
         .btn-danger:hover {
-            background-color: #c9302c;
+            background-color: #c9302c !important;
         }
 
         .btn-sm {
@@ -531,13 +532,13 @@
     <div id="mainContent" style="display: none; flex: 1; flex-direction: column;">
         <nav class="tabs">
             <button class="tab-button active" onclick="switchTab('aChecar')">
-            ⏳ Check-in <span id="badgePending" class="tab-badge" style="display: none; background-color: var(--success-color);">0</span>
-        </button>
+                ⏳ Check-in <span id="badgePending" class="tab-badge" style="display: none; background-color: var(--success-color);">0</span>
+            </button>
             <button class="tab-button" onclick="switchTab('checkout')">
                 🚪 Check-out <span id="badgeCheckout" class="tab-badge" style="display: none; background-color: var(--danger-color);">0</span>
             </button>
             <button class="tab-button" onclick="switchTab('ocupados')">
-                🏠 Ocupados <span id="badgeOccupied" class="tab-badge" style="display: none; background-color: var(--bourbon-gold);">0</span>
+                🏠 Ocupados <span id="badgeOccupied" class="tab-badge" style="display: none; background-color: var(--bourbon-gold) !important; color: white;">0</span>
             </button>
             <button class="tab-button" onclick="switchTab('lancar')">
                 📝 Lançar
@@ -908,6 +909,8 @@
         if (occupiedRooms.length > 0) {
             badgeOccupied.innerText = occupiedRooms.length;
             badgeOccupied.style.display = 'inline-block';
+            badgeOccupied.style.backgroundColor = 'var(--bourbon-gold)';
+            badgeOccupied.style.color = 'white';
         } else {
             badgeOccupied.style.display = 'none';
         }
@@ -1018,31 +1021,31 @@
     }
 
     function renderPendingList() {
-        const listContainer = document.getElementById('pendingList');
-        const filter = document.getElementById('filterStaff').value;
-        listContainer.innerHTML = '';
+    const listContainer = document.getElementById('pendingList');
+    const filter = document.getElementById('filterStaff').value;
+    listContainer.innerHTML = '';
 
-        let listaFiltrada = pendingRooms;
-        if (filter === 'MINE' && currentUser) {
-            listaFiltrada = pendingRooms.filter(r => r.assignedTo && r.assignedTo.toLowerCase() === currentUser.toLowerCase());
-        }
+    let listaFiltrada = pendingRooms;
+    if (filter === 'MINE' && currentUser) {
+        listaFiltrada = pendingRooms.filter(r => r.assignedTo && r.assignedTo.toLowerCase() === currentUser.toLowerCase());
+    }
 
-        if (listaFiltrada.length === 0) {
-            listContainer.innerHTML = '<div class="empty-state">Nenhum quarto encontrado para este filtro.</div>';
-            return;
-        }
+    if (listaFiltrada.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state">Nenhum quarto encontrado para este filtro.</div>';
+        return;
+    }
 
-        listaFiltrada.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'card card-pending';
-            card.innerHTML = `
-                <div class="room-info">
-                    <h4>Quarto ${item.room}</h4>
-                    <p>Responsável: <strong>${item.assignedTo ? item.assignedTo : 'Não atribuído'}</strong></p>
-                </div>
-                <button class="btn-action" onclick="iniciarConferencia('${item.room}')">Conferir</button>
-            `;
-            listContainer.appendChild(card);
+    listaFiltrada.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card card-pending';
+        card.innerHTML = `
+            <div class="room-info">
+                <h4>Quarto ${item.room}</h4>
+                <p>Responsável: <strong>${item.assignedTo ? item.assignedTo : 'Não atribuído'}</strong></p>
+            </div>
+            <button class="btn-action" style="background-color: var(--success-color) !important; color: #fff !important;" onclick="iniciarConferencia('${item.room}')">Conferir</button>
+        `;
+        listContainer.appendChild(card);
         });
     }
 
