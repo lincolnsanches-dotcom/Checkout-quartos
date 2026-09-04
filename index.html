@@ -533,6 +533,9 @@
             <button class="tab-button active" onclick="switchTab('aChecar')">
                 ⏳ Check-in <span id="badgePending" class="tab-badge" style="display: none;">0</span>
             </button>
+            <button class="tab-button" onclick="switchTab('checkout')">
+                🚪 Check-out <span id="badgeCheckout" class="tab-badge" style="display: none; background-color: var(--danger-color);">0</span>
+            </button>
             <button class="tab-button" onclick="switchTab('ocupados')">
                 🏠 Ocupados <span id="badgeOccupied" class="tab-badge" style="display: none; background-color: var(--bourbon-gold);">0</span>
             </button>
@@ -553,7 +556,7 @@
                 <h3 class="step-title">Prioridades de Check-in</h3>
                 
                 <div class="input-group">
-                    <label style="font-weight: bold; color: var(--bourbon-green);">Importar Planilha de Check-out (.xls / .xlsx / .csv):</label>
+                    <label style="font-weight: bold; color: var(--bourbon-green);">Importar Planilha de Check-in (.xls / .xlsx / .csv):</label>
                     <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: block; margin-top: 5px; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #fff;" onchange="processarArquivoExcel(event, 'pending')">
                 </div>
 
@@ -575,12 +578,53 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
                     <h3 class="step-title" style="margin: 0; border-bottom: none;">Quartos Aguardando Checagem</h3>
-                    <select id="filterStaff" onchange="renderPendingList()" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;">
-                        <option value="ALL">Exibir Todos</option>
-                        <option value="MINE">Meus Quartos</option>
-                    </select>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="filterStaff" onchange="renderPendingList()" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;">
+                            <option value="ALL">Exibir Todos</option>
+                            <option value="MINE">Meus Quartos</option>
+                        </select>
+                        <button id="btnLimparListaCheckin" class="btn-action btn-danger btn-sm" style="display: none;" onclick="limparPendentesCheckin()">Limpar Lista</button>
+                    </div>
                 </div>
                 <div id="pendingList" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Guia Check-out -->
+            <div id="checkoutTab" class="tab-content">
+                <h3 class="step-title">Saídas Prioritárias (Check-out)</h3>
+                
+                <div class="input-group">
+                    <label style="font-weight: bold; color: var(--bourbon-green);">Importar Relatório de Check-out (.xls / .xlsx / .csv):</label>
+                    <input type="file" id="excelCheckoutInput" accept=".xlsx, .xls, .csv" style="display: block; margin-top: 5px; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #fff;" onchange="processarArquivoExcel(event, 'checkout')">
+                </div>
+
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="bulkCheckout">Ou digite/cole a lista de check-out:</label>
+                    <textarea id="bulkCheckout" rows="2" placeholder="Ex: 108, 215, 301"></textarea>
+                    <button class="btn-submit btn-secondary" onclick="adicionarQuartosCheckout()">+ Adicionar Check-outs</button>
+                </div>
+
+                <!-- Módulo de Distribuição de Equipe para Check-out -->
+                <div style="background: #fdf2f2; border: 1px solid var(--danger-color); padding: 12px; border-radius: 8px; margin-top: 15px;">
+                    <h4 style="color: var(--danger-color); font-size: 13px; margin-bottom: 8px;">👥 Divisão de Escala de Check-out</h4>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <input type="text" id="activeStaffCheckout" placeholder="Nomes separados por vírgula (Ex: Joao, Hailton, Allison)">
+                    </div>
+                    <button class="btn-submit" style="font-size: 13px; padding: 8px; background-color: var(--danger-color);" onclick="distribuirQuartosCheckout()">Dividir Check-outs Igualmente</button>
+                    <button class="btn-submit btn-secondary" style="font-size: 11px; padding: 5px; margin-top: 5px;" onclick="usarRepositoresCadastradosParaRateio('activeStaffCheckout')">⚡ Usar Repositores Cadastrados no Sistema</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px;">
+                    <h3 class="step-title" style="margin: 0; border-bottom: none;">Lista de Saídas</h3>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="filterStaffCheckout" onchange="renderCheckoutList()" style="padding: 4px 8px; font-size: 12px; border-radius: 4px;">
+                            <option value="ALL">Exibir Todos</option>
+                            <option value="MINE">Meus Quartos</option>
+                        </select>
+                        <button id="btnLimparListaCheckout" class="btn-action btn-danger btn-sm" style="display: none;" onclick="limparCheckoutCheckin()">Limpar Lista</button>
+                    </div>
+                </div>
+                <div id="checkoutList"></div>
             </div>
 
             <!-- Guia 2: Ocupados (Para Abastecimento) -->
@@ -615,7 +659,7 @@
                             <option value="ALL">Exibir Todos</option>
                             <option value="MINE">Meus Quartos</option>
                         </select>
-                        <button class="btn-action btn-danger btn-sm" onclick="limparOcupados()">Limpar Lista</button>
+                        <button id="btnLimparListaOcupados" class="btn-action btn-danger btn-sm" style="display: none;" onclick="limparOcupadosCheckin()">Limpar Lista</button>
                     </div>
                 </div>
                 <div id="occupiedList"></div>
@@ -803,6 +847,9 @@
     let rawPending = JSON.parse(localStorage.getItem('bourbon_pending_rooms')) || ['104', '208', '312'];
     let pendingRooms = rawPending.map(item => typeof item === 'object' ? item : { room: item, assignedTo: null });
 
+    let rawCheckout = JSON.parse(localStorage.getItem('bourbon_checkout_rooms')) || [];
+    let checkoutRooms = rawCheckout.map(item => typeof item === 'object' ? item : { room: item, assignedTo: null });
+
     let rawOccupied = JSON.parse(localStorage.getItem('bourbon_occupied_rooms')) || [];
     let occupiedRooms = rawOccupied.map(item => typeof item === 'object' ? item : { room: item, assignedTo: null });
 
@@ -826,6 +873,11 @@
         updateBadges();
     }
 
+    function saveCheckoutRooms() {
+        localStorage.setItem('bourbon_checkout_rooms', JSON.stringify(checkoutRooms));
+        updateBadges();
+    }
+
     function saveOccupiedRooms() {
         localStorage.setItem('bourbon_occupied_rooms', JSON.stringify(occupiedRooms));
         updateBadges();
@@ -842,6 +894,14 @@
             badgePending.style.display = 'inline-block';
         } else {
             badgePending.style.display = 'none';
+        }
+
+        const badgeCheckout = document.getElementById('badgeCheckout');
+        if (checkoutRooms.length > 0) {
+            badgeCheckout.innerText = checkoutRooms.length;
+            badgeCheckout.style.display = 'inline-block';
+        } else {
+            badgeCheckout.style.display = 'none';
         }
 
         const badgeOccupied = document.getElementById('badgeOccupied');
@@ -883,7 +943,9 @@
     }
 
     function initApp() {
+        aplicarPermissoesInterface();
         renderPendingList();
+        renderCheckoutList();
         renderOccupiedList();
         renderProductsForLancar();
         renderAuditados();
@@ -892,8 +954,27 @@
         updateDatalist();
     }
 
+    function aplicarPermissoesInterface() {
+        const isManager = (currentUserObj && currentUserObj.role === 'admin');
+        
+        const btnLimparCheckin = document.getElementById('btnLimparListaCheckin');
+        if (btnLimparCheckin) {
+            btnLimparCheckin.style.display = isManager ? 'inline-block' : 'none';
+        }
+
+        const btnLimparCheckout = document.getElementById('btnLimparListaCheckout');
+        if (btnLimparCheckout) {
+            btnLimparCheckout.style.display = isManager ? 'inline-block' : 'none';
+        }
+
+        const btnLimparOcupados = document.getElementById('btnLimparListaOcupados');
+        if (btnLimparOcupados) {
+            btnLimparOcupados.style.display = isManager ? 'inline-block' : 'none';
+        }
+    }
+
     function switchTab(tabName) {
-        const tabs = ['aChecar', 'ocupados', 'lancar', 'auditados', 'produtos'];
+        const tabs = ['aChecar', 'checkout', 'ocupados', 'lancar', 'auditados', 'produtos'];
         tabs.forEach(t => {
             document.getElementById(t + 'Tab').classList.remove('active');
         });
@@ -983,6 +1064,109 @@
         input.value = '';
     }
 
+    function limparPendentesCheckin() {
+        if (!currentUserObj || currentUserObj.role !== 'admin') {
+            alert('Acesso negado: Apenas gestores podem limpar a lista.');
+            return;
+        }
+
+        if (confirm('Deseja realmente apagar toda a lista de quartos pendentes do Check-in?')) {
+            pendingRooms = [];
+            savePendingRooms();
+            renderPendingList();
+            updateDatalist();
+            alert('Lista de pendentes limpa com sucesso!');
+        }
+    }
+
+    // --- CHECK-OUT (SAÍDAS PRIORITÁRIAS & DIVISÃO) ---
+    function distribuirQuartosCheckout() {
+        const staffInput = document.getElementById('activeStaffCheckout').value.trim();
+        if (!staffInput) {
+            alert("Digite ao menos um nome de repositor.");
+            return;
+        }
+
+        const equipe = staffInput.split(/[\n,]+/).map(s => s.trim()).filter(s => s.length > 0);
+        if (equipe.length === 0 || checkoutRooms.length === 0) {
+            alert("Certifique-se de ter quartos em check-out e nomes válidos informados.");
+            return;
+        }
+
+        checkoutRooms.sort((a, b) => parseInt(a.room, 10) - parseInt(b.room, 10));
+
+        checkoutRooms.forEach((item, index) => {
+            item.assignedTo = equipe[index % equipe.length];
+        });
+
+        saveCheckoutRooms();
+        renderCheckoutList();
+        alert(`${checkoutRooms.length} quartos de check-out distribuídos entre: ${equipe.join(', ')}.`);
+    }
+
+    function renderCheckoutList() {
+        const container = document.getElementById('checkoutList');
+        const filter = document.getElementById('filterStaffCheckout') ? document.getElementById('filterStaffCheckout').value : 'ALL';
+        container.innerHTML = '';
+
+        let listaFiltrada = checkoutRooms;
+        if (filter === 'MINE' && currentUser) {
+            listaFiltrada = checkoutRooms.filter(r => r.assignedTo && r.assignedTo.toLowerCase() === currentUser.toLowerCase());
+        }
+
+        if (listaFiltrada.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum quarto em check-out encontrado para este filtro.</div>';
+            return;
+        }
+
+        listaFiltrada.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card card-pending';
+            card.style.borderLeftColor = 'var(--danger-color)';
+            card.innerHTML = `
+                <div class="room-info">
+                    <h4>Quarto ${item.room}</h4>
+                    <p>Responsável: <strong>${item.assignedTo ? item.assignedTo : 'Não atribuído'}</strong></p>
+                </div>
+                <button class="btn-action btn-danger" onclick="iniciarConferencia('${item.room}')">Conferir Saída</button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function adicionarQuartosCheckout() {
+        const input = document.getElementById('bulkCheckout');
+        const valor = input.value.trim();
+        if (!valor) return;
+
+        const novos = valor.split(/[\n,]+/).map(q => q.trim()).filter(q => q.length > 0);
+        novos.forEach(q => {
+            if (!checkoutRooms.some(item => item.room === q)) {
+                checkoutRooms.push({ room: q, assignedTo: null });
+            }
+        });
+
+        saveCheckoutRooms();
+        renderCheckoutList();
+        updateDatalist();
+        input.value = '';
+    }
+
+    function limparCheckoutCheckin() {
+        if (!currentUserObj || currentUserObj.role !== 'admin') {
+            alert('Acesso negado: Apenas gestores podem limpar a lista.');
+            return;
+        }
+
+        if (confirm('Deseja realmente apagar toda a lista de Check-out?')) {
+            checkoutRooms = [];
+            saveCheckoutRooms();
+            renderCheckoutList();
+            updateDatalist();
+            alert('Lista de Check-out limpa com sucesso!');
+        }
+    }
+
     // --- OCUPADOS (ABASTECIMENTO & DIVISÃO) ---
     function distribuirQuartosOcupados() {
         const staffInput = document.getElementById('activeStaffOccupied').value.trim();
@@ -1055,12 +1239,18 @@
         input.value = '';
     }
 
-    function limparOcupados() {
-        if (confirm('Deseja realmente limpar a lista de quartos ocupados?')) {
+    function limparOcupadosCheckin() {
+        if (!currentUserObj || currentUserObj.role !== 'admin') {
+            alert('Acesso negado: Apenas gestores podem limpar a lista.');
+            return;
+        }
+
+        if (confirm('Deseja realmente apagar toda a lista de quartos Ocupados?')) {
             occupiedRooms = [];
             saveOccupiedRooms();
             renderOccupiedList();
             updateDatalist();
+            alert('Lista de ocupados limpa com sucesso!');
         }
     }
 
@@ -1074,8 +1264,9 @@
         datalist.innerHTML = '';
         
         const quartosPendentes = pendingRooms.map(r => r.room);
+        const quartosCheckout = checkoutRooms.map(r => r.room);
         const quartosOcupados = occupiedRooms.map(r => r.room);
-        const todosQuartos = [...new Set([...quartosPendentes, ...quartosOcupados])];
+        const todosQuartos = [...new Set([...quartosPendentes, ...quartosCheckout, ...quartosOcupados])];
         
         todosQuartos.forEach(room => {
             const opt = document.createElement('option');
@@ -1204,11 +1395,12 @@
         }
 
         const quartosPendentes = pendingRooms.map(r => r.room);
+        const quartosCheckout = checkoutRooms.map(r => r.room);
         const quartosOcupados = occupiedRooms.map(r => r.room);
-        const todosQuartosValidos = [...new Set([...quartosPendentes, ...quartosOcupados])];
+        const todosQuartosValidos = [...new Set([...quartosPendentes, ...quartosCheckout, ...quartosOcupados])];
 
         if (!todosQuartosValidos.includes(room)) {
-            alert(`O Quarto ${room} não consta nas listas ativas (Check-in ou Ocupados). Importe ou adicione o quarto antes de lançar.`);
+            alert(`O Quarto ${room} não consta nas listas ativas (Check-in, Check-out ou Ocupados). Importe ou adicione o quarto antes de lançar.`);
             return;
         }
 
@@ -1259,6 +1451,9 @@
         pendingRooms = pendingRooms.filter(r => r.room !== room);
         savePendingRooms();
 
+        checkoutRooms = checkoutRooms.filter(r => r.room !== room);
+        saveCheckoutRooms();
+
         document.getElementById('roomSelect').value = '';
         document.getElementById('auditObs').value = '';
         currentQuantities = {};
@@ -1269,6 +1464,7 @@
 
         alert(`Lançamento do Quarto ${room} registrado!`);
         renderPendingList();
+        renderCheckoutList();
         renderAuditados();
         switchTab('auditados');
     }
@@ -1344,13 +1540,40 @@
         const targetAudit = audits.find(a => a.id === auditId);
         if (!targetAudit) return;
 
-        const novaObs = prompt("Descreva a correção / ajuste de divergência para este lançamento:", targetAudit.obs || "");
-        if (novaObs !== null) {
-            targetAudit.obs = novaObs + " (Corrigido por: " + currentUser + ")";
-            saveAudits();
-            renderAuditados();
-            alert("Lançamento atualizado com sucesso!");
+        let novasQuantidades = [];
+        let novoTotal = 0;
+
+        for (let p of products) {
+            const itemExistente = targetAudit.items.find(i => i.productId === p.id);
+            const qtdAtual = itemExistente ? itemExistente.qty : 0;
+
+            const entrada = prompt(`Quantidade para "${p.name}" (R$ ${p.price.toFixed(2)}):`, qtdAtual);
+            if (entrada === null) return;
+
+            const novaQtd = parseInt(entrada, 10);
+            if (!isNaN(novaQtd) && novaQtd > 0) {
+                const subtotal = novaQtd * p.price;
+                novasQuantidades.push({
+                    productId: p.id,
+                    name: p.name,
+                    price: p.price,
+                    qty: novaQtd,
+                    subtotal: subtotal
+                });
+                novoTotal += subtotal;
+            }
         }
+
+        const novaObs = prompt("Descreva o motivo do ajuste/divergência:", targetAudit.obs || "");
+        if (novaObs === null) return;
+
+        targetAudit.items = novasQuantidades;
+        targetAudit.total = novoTotal;
+        targetAudit.obs = novaObs + " (Corrigido por: " + currentUser + ")";
+
+        saveAudits();
+        renderAuditados();
+        alert("Divergência e valores atualizados com sucesso!");
     }
 
     function exportarExcel() {
@@ -1499,6 +1722,9 @@
                 if (tipo === 'pending') {
                     document.getElementById('bulkRooms').value = quartosEncontrados.join(', ');
                     adicionarQuartosPendentes();
+                } else if (tipo === 'checkout') {
+                    document.getElementById('bulkCheckout').value = quartosEncontrados.join(', ');
+                    adicionarQuartosCheckout();
                 } else if (tipo === 'occupied') {
                     document.getElementById('bulkOccupied').value = quartosEncontrados.join(', ');
                     adicionarQuartosOcupados();
